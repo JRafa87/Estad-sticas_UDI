@@ -76,7 +76,7 @@ if uploaded_file is not None:
     st.write(f"Probabilidad de que un usuario esté usando {red_social}: {probabilidad_red_social:.2f}")
 
     # Ejercicio 2: Probabilidad Condicional
-    plataforma_mensajeria = st.selectbox("Selecciona la plataforma de mensajería", df['Plataforma_mensajeria'].unique())
+    plataforma_mensajeria = st.selectbox("Selecciona si se usa redes durante el trabajo", df['Uso_redes_durante_trabajo'].unique())
     lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión", df['Lugar_habitual_conexion'].unique())
     
     usuarios_laborales = df[df['Lugar_habitual_conexion'] == lugar_conexion]
