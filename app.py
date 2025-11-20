@@ -21,6 +21,9 @@ st.markdown("""
         border-radius: 10px;
         box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
     }
+    .block-container {
+        padding-top: 2rem;
+    }
     h1 {
         color: #2c3e50;
     }
@@ -66,7 +69,6 @@ uploaded_file = st.sidebar.file_uploader("Sube tu archivo Excel (.xlsx)", type="
 
 # --- PANTALLA PRINCIPAL ---
 st.title("📊 Análisis Interactivo: Redes Sociales y Productividad")
-st.markdown("Esta herramienta permite explorar patrones de comportamiento digital y calcular probabilidades.")
 
 if uploaded_file is not None:
     # Cargar los datos
@@ -74,22 +76,26 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
         st.sidebar.success("✅ Archivo cargado correctamente")
         
-        with st.sidebar.expander("🔍 Vista previa de los datos", expanded=False):
-            st.dataframe(df.head())
-            st.caption(f"Dimensiones del dataset: {df.shape[0]} filas x {df.shape[1]} columnas")
+        # --- VISTA DE DATOS PERSISTENTE (ARRIBA) ---
+        with st.expander("🔍 Vista Previa de los Datos Cargados (Click para expandir/contraer)", expanded=True):
+            st.dataframe(df.head(), use_container_width=True)
+            st.caption(f"Dimensiones del dataset: **{df.shape[0]} filas** x **{df.shape[1]} columnas**")
+        
+        st.markdown("---")
 
         # --- PESTAÑAS PRINCIPALES ---
-        tab_desc, tab_prob = st.tabs(["📈 Análisis Descriptivo", "🎲 Probabilidades"])
+        tab_desc, tab_prob = st.tabs(["📈 Análisis Descriptivo Completo", "🎲 Laboratorio de Probabilidades"])
 
         # ==============================================================================
         # PESTAÑA 1: ANÁLISIS DESCRIPTIVO
         # ==============================================================================
         with tab_desc:
-            st.header("Análisis Estadístico de Variables")
+            # Selección de variable
+            col_var, col_info = st.columns([1, 3])
+            with col_var:
+                st.markdown("##### Variable a analizar")
+                selected_variable = st.selectbox("Selecciona la columna:", df.columns)
             
-            # Selección de variable (SOLO AQUÍ)
-            st.markdown("##### Configuración del análisis")
-            selected_variable = st.selectbox("Selecciona la variable a analizar:", df.columns)
             st.markdown("---")
 
             # Variable para almacenar datos de exportación
@@ -101,59 +107,84 @@ if uploaded_file is not None:
             # ---------------------------------------------------------
             if df[selected_variable].dtype in ['float64', 'int64']:
                 
-                # Cálculos
+                # --- CÁLCULOS ESTADÍSTICOS ---
+                # Medidas de Tendencia Central
                 mean_val = df[selected_variable].mean()
                 median_val = df[selected_variable].median()
                 mode_val = df[selected_variable].mode()[0]
+                
+                # Medidas de Dispersión
                 std_val = df[selected_variable].std()
                 var_val = df[selected_variable].var()
+                min_val = df[selected_variable].min()
+                max_val = df[selected_variable].max()
+                rango = max_val - min_val
+
+                # Medidas de Posición (Percentiles, Deciles, IQR)
+                q1 = df[selected_variable].quantile(0.25)
+                q3 = df[selected_variable].quantile(0.75)
+                iqr = q3 - q1
+                decil_1 = df[selected_variable].quantile(0.10)
+                decil_9 = df[selected_variable].quantile(0.90)
 
                 # Preparar datos para exportar
                 export_df = pd.DataFrame({
-                    "Métrica": ["Media", "Mediana", "Moda", "Desviación Estándar", "Varianza"],
-                    "Valor": [mean_val, median_val, mode_val, std_val, var_val]
+                    "Métrica": ["Media", "Mediana", "Moda", "Desv. Estándar", "Varianza", "Mínimo", "Máximo", "Rango", "Q1 (25%)", "Q3 (75%)", "IQR", "Decil 1", "Decil 9"],
+                    "Valor": [mean_val, median_val, mode_val, std_val, var_val, min_val, max_val, rango, q1, q3, iqr, decil_1, decil_9]
                 })
                 export_filename = f"estadisticas_{selected_variable}.csv"
 
-                # Fila de Métricas (Dashboard style)
+                st.subheader("1. Medidas Estadísticas")
+                
+                # Fila 1: Tendencia Central y Dispersión Básica
                 col1, col2, col3, col4 = st.columns(4)
-                col1.metric("Media", f"{mean_val:.2f}", delta_color="off")
-                col2.metric("Mediana", f"{median_val:.2f}", delta_color="off")
-                col3.metric("Moda", f"{mode_val}", delta_color="off")
-                col4.metric("Desv. Estándar", f"{std_val:.2f}", help="Indica qué tan dispersos están los datos")
+                col1.metric("Media (Promedio)", f"{mean_val:.2f}")
+                col2.metric("Mediana (Centro)", f"{median_val:.2f}")
+                col3.metric("Moda (Frecuente)", f"{mode_val}")
+                col4.metric("Desv. Estándar", f"{std_val:.2f}")
 
-                st.markdown("### Visualización e Interpretación")
-                
-                # Layout: Gráfico (Izquierda, Grande) | Interpretación (Derecha, Pequeña)
-                col_graph, col_text = st.columns([2, 1])
-                
-                with col_graph:
-                    # Gráficos lado a lado
-                    subtab1, subtab2 = st.tabs(["Histograma (Distribución)", "Boxplot (Valores Atípicos)"])
-                    
-                    with subtab1:
-                        fig, ax = plt.subplots(figsize=(10, 5))
-                        sns.histplot(df[selected_variable], kde=True, ax=ax, color='#3498db', bins=20)
-                        ax.set_title(f"Distribución de {selected_variable}")
-                        st.pyplot(fig)
-                    
-                    with subtab2:
-                        fig, ax = plt.subplots(figsize=(10, 5))
-                        sns.boxplot(x=df[selected_variable], ax=ax, color='#2ecc71')
-                        ax.set_title(f"Rango y Atípicos de {selected_variable}")
-                        st.pyplot(fig)
+                # Fila 2: Medidas de Posición y Rango
+                st.markdown("###### Medidas de Posición y Ubicación")
+                col5, col6, col7, col8, col9 = st.columns(5)
+                col5.metric("Mínimo", f"{min_val:.2f}")
+                col6.metric("Q1 (25%)", f"{q1:.2f}")
+                col7.metric("Q3 (75%)", f"{q3:.2f}")
+                col8.metric("Máximo", f"{max_val:.2f}")
+                col9.metric("IQR (Rango Interc.)", f"{iqr:.2f}", help="Diferencia entre el Q3 y el Q1. Indica la dispersión del 50% central de los datos.")
 
-                with col_text:
-                    st.subheader("📝 Análisis")
-                    st.info(f"**Centralidad:**\nEl usuario promedio pasa **{mean_val:.2f}** minutos. La mitad de los usuarios está por debajo de **{median_val:.2f}**.")
-                    st.warning(f"**Dispersión:**\nCon una desviación de **{std_val:.2f}**, existe una variabilidad {'alta' if std_val > mean_val/2 else 'moderada'} en los hábitos.")
-                    st.success(f"**Tendencia:**\nEl valor más frecuente es **{mode_val}**.")
+                # --- VISUALIZACIÓN ---
+                st.subheader("2. Visualización de Distribución")
+                
+                # Layout: Gráficos juntos lado a lado (mitad y mitad)
+                col_hist, col_box = st.columns(2)
+                
+                with col_hist:
+                    st.markdown("**Histograma de Frecuencias**")
+                    fig1, ax1 = plt.subplots(figsize=(6, 4))
+                    sns.histplot(df[selected_variable], kde=True, ax=ax1, color='#3498db', bins=20)
+                    ax1.set_xlabel(selected_variable)
+                    ax1.set_ylabel("Frecuencia")
+                    st.pyplot(fig1, use_container_width=True)
+                    
+                with col_box:
+                    st.markdown("**Boxplot (Diagrama de Caja)**")
+                    fig2, ax2 = plt.subplots(figsize=(6, 4))
+                    sns.boxplot(y=df[selected_variable], ax=ax2, color='#2ecc71')
+                    ax2.set_ylabel(selected_variable)
+                    st.pyplot(fig2, use_container_width=True)
+
+                # Interpretación debajo de los gráficos para aprovechar el ancho
+                st.info(f"""
+                **Interpretación Conjunta:**
+                * El **histograma** muestra cómo se concentran los datos. Si la curva es simétrica, la media (**{mean_val:.2f}**) y la mediana (**{median_val:.2f}**) deberían ser similares.
+                * El **boxplot** resalta los valores atípicos (puntos fuera de los bigotes). El 50% central de tus datos se encuentra entre **{q1:.2f}** y **{q3:.2f}**.
+                """)
 
             # ---------------------------------------------------------
             # LÓGICA PARA VARIABLES CATEGÓRICAS
             # ---------------------------------------------------------
             else:
-                # Cálculos completos (4 columnas)
+                # Cálculos completos
                 freq = df[selected_variable].value_counts()
                 total_n = len(df)
                 
@@ -174,54 +205,42 @@ if uploaded_file is not None:
                 export_df = freq_table.reset_index().rename(columns={'index': selected_variable})
                 export_filename = f"frecuencias_{selected_variable}.csv"
 
-                # Métricas Resumidas
-                col_kpi1, col_kpi2 = st.columns(2)
-                col_kpi1.metric("Moda (Más común)", freq.idxmax())
-                col_kpi2.metric("Total Registros", total_n)
+                st.subheader("1. Resumen Categórico")
                 
-                st.markdown("### Visualización e Interpretación")
-                
-                # Layout: Gráfico vs Interpretación
-                col_chart, col_insight = st.columns([2, 1])
+                # Gráfico a la izquierda, Tabla a la derecha
+                col_chart, col_table = st.columns([1, 1])
 
                 with col_chart:
-                    fig, ax = plt.subplots(figsize=(10, 5))
+                    st.markdown("**Gráfico de Barras**")
+                    fig, ax = plt.subplots(figsize=(6, 4))
                     sns.countplot(y=selected_variable, data=df, order=freq.index, palette='viridis', ax=ax)
-                    ax.set_title(f"Conteo por {selected_variable}")
-                    ax.set_xlabel("Cantidad de Usuarios")
-                    st.pyplot(fig)
+                    ax.set_xlabel("Cantidad")
+                    st.pyplot(fig, use_container_width=True)
 
-                with col_insight:
-                    st.subheader("📝 Análisis Rápido")
-                    top_val = freq.idxmax()
-                    top_perc = freq_rel.max()
-                    st.success(f"**Dominancia:**\nLa categoría **{top_val}** es la predominante, representando el **{top_perc:.2f}%** de la muestra.")
-                    st.info(f"**Diversidad:**\nSe encontraron **{len(freq)}** categorías únicas en esta variable.")
-
-                # TABLA COMPLETA DE ANCHO TOTAL
-                st.subheader("📋 Tabla de Frecuencias Detallada")
-                st.dataframe(
-                    freq_table.style.format({
-                        'Frecuencia Relativa (%)': "{:.2f}%",
-                        'Frec. Acumulada Relativa (%)': "{:.2f}%"
-                    }).background_gradient(cmap="Blues", subset=['Frecuencia Absoluta']),
-                    use_container_width=True  # Ocupa todo el ancho disponible
-                )
+                with col_table:
+                    st.markdown("**Tabla de Frecuencias**")
+                    st.dataframe(
+                        freq_table.style.format({
+                            'Frecuencia Relativa (%)': "{:.2f}%",
+                            'Frec. Acumulada Relativa (%)': "{:.2f}%"
+                        }).background_gradient(cmap="Blues", subset=['Frecuencia Absoluta']),
+                        use_container_width=True,
+                        height=300
+                    )
+                
+                top_val = freq.idxmax()
+                st.success(f"La categoría dominante es **{top_val}** con **{freq.max()}** registros, lo que representa el **{freq_rel.max():.2f}%** del total.")
 
             # --- SECCIÓN DE EXPORTACIÓN ---
             st.markdown("---")
             if export_df is not None:
-                st.markdown("<h3 style='text-align: center; color: #2c3e50;'>📂 Exportar Datos del Análisis</h3>", unsafe_allow_html=True)
-                st.markdown("<p style='text-align: center;'>Descarga los resultados actuales en formato CSV.</p>", unsafe_allow_html=True)
-                
                 col_vacio1, col_btn, col_vacio2 = st.columns([1, 2, 1])
                 with col_btn:
                     st.download_button(
-                        label="📥 DESCARGAR RESULTADOS AHORA",
+                        label="📥 DESCARGAR RESULTADOS (CSV)",
                         data=export_df.to_csv(index=False).encode('utf-8'),
                         file_name=export_filename,
-                        mime='text/csv',
-                        help="Haz clic para guardar los datos calculados arriba."
+                        mime='text/csv'
                     )
 
         # ==============================================================================
@@ -229,98 +248,100 @@ if uploaded_file is not None:
         # ==============================================================================
         with tab_prob:
             st.header("Laboratorio de Probabilidades")
-            st.caption("Modifica los parámetros en cada pestaña para actualizar las preguntas y los resultados.")
+            st.markdown("Selecciona el tipo de cálculo que deseas realizar:")
 
-            # Sub-tabs para organizar los ejercicios
-            subtab_p1, subtab_p2, subtab_p3 = st.tabs(["🎲 Probabilidad Simple", "🔗 Probabilidad Condicional", "📊 Distribución Binomial"])
-
-            # --- EJERCICIO 1 ---
-            with subtab_p1:
-                col_sel, col_res = st.columns([1, 2])
-                with col_sel:
+            # Usar columnas para los "tabs" visuales o expanders para que se vean mejor distribuidos
+            # Aquí usaremos expanders abiertos por defecto o contenedores separados
+            
+            # --- EJERCICIO 1: PROBABILIDAD SIMPLE ---
+            with st.container():
+                st.subheader("🎲 1. Probabilidad Simple (Marginal)")
+                st.caption("Calcula la probabilidad de que ocurra un evento simple (ej. elegir una Red Social específica).")
+                
+                c1, c2 = st.columns([1, 2])
+                with c1:
                     red_social_sel = st.selectbox(
-                        "Selecciona la Red Social:", 
+                        "Evento de interés (Red Social):", 
                         df['Red_social_mas_utilizada'].unique(),
                         key="red_simple"
                     )
-                
-                with col_res:
-                    st.markdown(f"### ❓ Pregunta: ¿Cuál es la probabilidad de que un usuario use **{red_social_sel}**?")
-                    
+                with c2:
                     count = df[df['Red_social_mas_utilizada'] == red_social_sel].shape[0]
                     total = df.shape[0]
                     prob = count / total
                     
-                    st.metric(label=f"Probabilidad (P = {count}/{total})", value=f"{prob:.4f}", delta=f"{prob*100:.2f}%")
+                    st.info(f"**Pregunta:** ¿Cuál es la probabilidad de elegir un usuario que use **{red_social_sel}**?")
+                    st.metric("Resultado", f"{prob:.4f}", f"{prob*100:.2f}%")
+            
+            st.divider()
 
-            # --- EJERCICIO 2 ---
-            with subtab_p2:
-                col_sel_a, col_sel_b, col_res_2 = st.columns([1, 1, 2])
+            # --- EJERCICIO 2: PROBABILIDAD CONDICIONAL ---
+            with st.container():
+                st.subheader("🔗 2. Probabilidad Condicional")
+                st.caption("Calcula P(A|B): Probabilidad de A dado que ya ocurrió B.")
                 
-                with col_sel_a:
-                    lugar_sel = st.selectbox("Dado que está en (Lugar):", df['Lugar_habitual_conexion'].unique())
-                with col_sel_b:
-                    trabajo_sel = st.selectbox("¿Usa redes en el trabajo?:", df['Uso_redes_durante_trabajo'].unique())
-
-                with col_res_2:
-                    st.markdown(f"### ❓ Pregunta: Dado que un usuario está en **{lugar_sel}**, ¿cuál es la probabilidad de que **{trabajo_sel}** use redes en el trabajo?")
+                c1, c2 = st.columns([1, 2])
+                with c1:
+                    st.markdown("**Condición (Dado que...):**")
+                    lugar_sel = st.selectbox("Lugar de conexión:", df['Lugar_habitual_conexion'].unique(), key="cond_lugar")
                     
+                    st.markdown("**Evento (Probabilidad de...):**")
+                    trabajo_sel = st.selectbox("Uso en trabajo:", df['Uso_redes_durante_trabajo'].unique(), key="cond_trabajo")
+                
+                with c2:
                     subset = df[df['Lugar_habitual_conexion'] == lugar_sel]
+                    
                     if not subset.empty:
                         target = subset[subset['Uso_redes_durante_trabajo'] == trabajo_sel].shape[0]
-                        prob_cond = target / subset.shape[0]
-                        st.metric(label="Probabilidad Condicional", value=f"{prob_cond:.4f}", delta=f"{prob_cond*100:.2f}%")
+                        total_cond = subset.shape[0]
+                        prob_cond = target / total_cond
+                        
+                        st.info(f"**Pregunta:** De los usuarios que se conectan en **{lugar_sel}** ({total_cond}), ¿cuál es la probabilidad de que **{trabajo_sel}** usen redes en el trabajo?")
+                        st.metric("Resultado Condicional", f"{prob_cond:.4f}", f"{prob_cond*100:.2f}%")
                     else:
-                        st.error("No hay datos para esta combinación.")
+                        st.error("No hay datos que cumplan la condición inicial.")
 
-            # --- EJERCICIO 3 ---
-            with subtab_p3:
-                col_params, col_calc = st.columns([1, 2])
+            st.divider()
+
+            # --- EJERCICIO 3: DISTRIBUCIÓN BINOMIAL ---
+            with st.container():
+                st.subheader("📊 3. Distribución Binomial")
+                st.caption("Calcula la probabilidad de obtener exactamente 'k' éxitos en 'n' intentos.")
                 
-                with col_params:
-                    lugar_bin = st.selectbox("Lugar de conexión:", df['Lugar_habitual_conexion'].unique(), key="lugar_bin")
-                    red_bin = st.selectbox("Red Social éxito:", df['Red_social_mas_utilizada'].unique(), key="red_bin")
-                    k_val = st.number_input("Cantidad de éxitos (k)", min_value=0, max_value=20, value=5)
-                    n_val = st.number_input("Tamaño de muestra (n)", min_value=1, max_value=100, value=10)
-
-                with col_calc:
-                    st.markdown(f"### ❓ Pregunta: Si tomamos **{n_val}** usuarios en **{lugar_bin}**, ¿cuál es la probabilidad de que exactamente **{k_val}** usen **{red_bin}**?")
-                    
+                c1, c2, c3 = st.columns([1, 1, 2])
+                
+                with c1:
+                    st.markdown("**1. Configurar Éxito**")
+                    lugar_bin = st.selectbox("Filtro Población:", df['Lugar_habitual_conexion'].unique(), key="bin_lugar")
+                    red_bin = st.selectbox("Evento Éxito:", df['Red_social_mas_utilizada'].unique(), key="bin_red")
+                
+                with c2:
+                    st.markdown("**2. Parámetros Ensayo**")
+                    n_val = st.number_input("Muestra (n)", 1, 100, 10)
+                    k_val = st.number_input("Éxitos deseados (k)", 0, n_val, 5)
+                
+                with c3:
                     subset_bin = df[df['Lugar_habitual_conexion'] == lugar_bin]
                     if not subset_bin.empty:
                         p_real = subset_bin['Red_social_mas_utilizada'].value_counts(normalize=True).get(red_bin, 0)
                         
+                        st.markdown(f"**Probabilidad base (p):** `{p_real:.4f}`")
+                        
                         if p_real > 0:
                             prob_binom = binom.pmf(k_val, n_val, p_real)
-                            st.info(f"La probabilidad base (p) calculada de los datos es: **{p_real:.4f}**")
-                            st.metric(label=f"Probabilidad Binomial (k={k_val}, n={n_val})", value=f"{prob_binom:.4f}")
-                            
-                            # Gráfico pequeño de la distribución
-                            fig_bin, ax_bin = plt.subplots(figsize=(6, 2))
-                            x = range(n_val + 1)
-                            y = [binom.pmf(i, n_val, p_real) for i in x]
-                            sns.barplot(x=list(x), y=y, ax=ax_bin, color="#9b59b6")
-                            ax_bin.axvline(k_val, color='red', linestyle='--')
-                            ax_bin.set_title("Distribución de Probabilidad")
-                            st.pyplot(fig_bin)
+                            st.success(f"Probabilidad de encontrar exactamente **{k_val}** usuarios de **{red_bin}** en una muestra de **{n_val}**:")
+                            st.metric("Resultado Binomial", f"{prob_binom:.4f}")
                         else:
                             st.warning(f"La probabilidad base es 0. Nadie en {lugar_bin} usa {red_bin}.")
                     else:
-                        st.error("No hay datos suficientes en el filtro.")
+                        st.error("Filtro de población vacío.")
 
     except Exception as e:
         st.error(f"Hubo un error al procesar el archivo: {e}")
-        st.info("Asegúrate de que el Excel tenga las columnas correctas.")
+        st.info("Asegúrate de que el Excel tenga un formato compatible.")
 
 else:
-    st.info("👈 Por favor, carga un archivo Excel desde la barra lateral para comenzar el análisis.")
-    st.markdown("""
-    ### Formato esperado del Excel:
-    | Red_social_mas_utilizada | Uso_redes_durante_trabajo | Lugar_habitual_conexion | Tiempo_minutos |
-    |--------------------------|---------------------------|-------------------------|----------------|
-    | Twitter                  | Sí                        | Casa                    | 120            |
-    | Instagram                | No                        | Oficina                 | 45             |
-    """)
+    st.info("👈 Por favor, carga un archivo Excel desde la barra lateral para comenzar.")
 
 
 
