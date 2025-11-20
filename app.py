@@ -8,19 +8,23 @@ import io
 # Configuración de la página
 st.set_page_config(page_title="Análisis de Datos", layout="wide", page_icon="📊")
 
-# --- ESTILOS CSS MEJORADOS ---
+# --- ESTILOS CSS MEJORADOS Y PERSONALIZACIÓN DE COLORES DE MÉTRICAS ---
 st.markdown("""
     <style>
     .main {
         background-color: #f8f9fa;
     }
-    /* Ajuste para las métricas */
+    /* Estilo base para todas las métricas */
     div[data-testid="stMetric"] {
         background-color: #ffffff;
         border: 1px solid #e6e6e6;
         padding: 10px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: 0.3s;
+    }
+    div[data-testid="stMetric"]:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     h1 { color: #2c3e50; }
     h2, h3, h4 { color: #34495e; }
@@ -41,8 +45,23 @@ st.markdown("""
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
-    /* Estilo para el gráfico categórico: hacer que cambie de color al pasar el mouse */
-    /* Nota: Streamlit inyecta Matplotlib/Seaborn en un SVG o Canvas, la interactividad CSS es limitada a elementos Streamlit como el Download Button. Para interactividad en gráficas, se usa Plotly/Altair/Bokeh, pero mantendremos Matplotlib/Seaborn y solo haremos un cambio de color simple en el código de Python. */
+    /* CLASES PARA COLORES DE FONDO EN MÉTRICAS NUMÉRICAS */
+    /* Tendencia Central: Azul */
+    .metric-central > div[data-testid="stMetric"] {
+        background-color: #e6f7ff; 
+        border-left: 5px solid #3498db;
+    }
+    /* Dispersión y Rango: Verde */
+    .metric-dispersion > div[data-testid="stMetric"] {
+        background-color: #eafaea; 
+        border-left: 5px solid #2ecc71;
+    }
+    /* Posición (Cuartiles): Púrpura */
+    .metric-position > div[data-testid="stMetric"] {
+        background-color: #f7e6ff; 
+        border-left: 5px solid #9b59b6;
+    }
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -103,28 +122,58 @@ if uploaded_file is not None:
 
                 st.subheader("1. Resumen Estadístico")
                 
-                # TENDENCIA CENTRAL
+                # TENDENCIA CENTRAL (AZUL)
                 st.markdown("**Tendencia Central**")
                 c1, c2, c3 = st.columns(3)
+                c1.markdown('<div class="metric-central">', unsafe_allow_html=True)
                 c1.metric("Media", f"{mean_val:.2f}")
+                c1.markdown('</div>', unsafe_allow_html=True)
+
+                c2.markdown('<div class="metric-central">', unsafe_allow_html=True)
                 c2.metric("Mediana (Q2)", f"{median_val:.2f}")
+                c2.markdown('</div>', unsafe_allow_html=True)
+
+                c3.markdown('<div class="metric-central">', unsafe_allow_html=True)
                 c3.metric("Moda", f"{mode_val}")
+                c3.markdown('</div>', unsafe_allow_html=True)
                 
-                # DISPERSIÓN
+                # DISPERSIÓN (VERDE)
                 st.markdown("**Dispersión y Rango**")
                 c4, c5, c6 = st.columns(3)
+                c4.markdown('<div class="metric-dispersion">', unsafe_allow_html=True)
                 c4.metric("Desv. Estándar", f"{std_val:.2f}")
-                c5.metric("Varianza", f"{var_val:.2f}") # Nueva métrica
-                c6.metric("Rango (Max - Min)", f"{max_val - min_val:.2f}")
+                c4.markdown('</div>', unsafe_allow_html=True)
 
-                # POSICIÓN
+                c5.markdown('<div class="metric-dispersion">', unsafe_allow_html=True)
+                c5.metric("Varianza", f"{var_val:.2f}")
+                c5.markdown('</div>', unsafe_allow_html=True)
+
+                c6.markdown('<div class="metric-dispersion">', unsafe_allow_html=True)
+                c6.metric("Rango (Max - Min)", f"{max_val - min_val:.2f}")
+                c6.markdown('</div>', unsafe_allow_html=True)
+
+                # POSICIÓN (PÚRPURA)
                 st.markdown("**Posición (Cuartiles)**")
                 c7, c8, c9 = st.columns(3)
+
+                c7.markdown('<div class="metric-position">', unsafe_allow_html=True)
                 c7.metric("Mínimo", f"{min_val:.2f}")
+                c7.markdown('</div>', unsafe_allow_html=True)
+
+                c8.markdown('<div class="metric-position">', unsafe_allow_html=True)
                 c8.metric("Q1 (25%)", f"{q1:.2f}")
+                c8.markdown('</div>', unsafe_allow_html=True)
+
+                c9.markdown('<div class="metric-position">', unsafe_allow_html=True)
                 c9.metric("Q3 (75%)", f"{q3:.2f}")
+                c9.markdown('</div>', unsafe_allow_html=True)
                 
-                st.metric("Rango Intercuartílico (IQR)", f"{iqr:.2f}")
+                # IQR (Usando el color de Posición)
+                col_iqr = st.columns(3)[1]
+                col_iqr.markdown('<div class="metric-position">', unsafe_allow_html=True)
+                col_iqr.metric("Rango Intercuartílico (IQR)", f"{iqr:.2f}")
+                col_iqr.markdown('</div>', unsafe_allow_html=True)
+
 
                 st.divider()
 
@@ -184,14 +233,11 @@ if uploaded_file is not None:
                 # 2. GRÁFICO (Debajo)
                 st.markdown("### 📊 Distribución Visual")
                 fig, ax = plt.subplots(figsize=(10, 4))
-                # Usamos una paleta más vibrante y agregamos un borde blanco para el hover visual
+                # Usamos una paleta más vibrante
                 bars = sns.countplot(y=selected_variable, data=df, order=freq.index, palette='Spectral', ax=ax)
                 ax.set_xlabel("Frecuencia")
                 ax.set_ylabel("Categoría")
                 
-                # Esto es un truco visual para el color, pero la interactividad directa con CSS/JS en un
-                # gráfico Matplotlib renderizado por Streamlit es muy limitada.
-                # Lo mejor que se puede hacer es cambiar la paleta de colores.
                 st.pyplot(fig, use_container_width=True)
                 
                 # INTERPRETACIÓN (Al final)
@@ -260,7 +306,7 @@ if uploaded_file is not None:
 
             st.divider()
 
-            # 3. Binomial
+            # 3. Binomial (Ahora con porcentaje en la métrica)
             with st.container():
                 st.markdown("### 📊 3. Distribución Binomial")
                 c_bin1, c_bin2, c_bin3 = st.columns([1, 1, 2])
@@ -278,7 +324,7 @@ if uploaded_file is not None:
                     if not sub_bin.empty:
                         p = sub_bin['Red_social_mas_utilizada'].value_counts(normalize=True).get(red_bin, 0)
                         prob_k = binom.pmf(k, n, p)
-                        st.metric("Resultado Binomial", f"{prob_k:.4f}")
+                        st.metric("Resultado Binomial", f"{prob_k:.4f}", f"{prob_k*100:.2f}%") # AÑADIDO PORCENTAJE
                     else:
                         st.error("Sin datos suficientes.")
                 
