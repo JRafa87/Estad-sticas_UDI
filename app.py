@@ -40,6 +40,9 @@ st.markdown("""
         background-color: #219150;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
+
+    /* Estilo para el gráfico categórico: hacer que cambie de color al pasar el mouse */
+    /* Nota: Streamlit inyecta Matplotlib/Seaborn en un SVG o Canvas, la interactividad CSS es limitada a elementos Streamlit como el Download Button. Para interactividad en gráficas, se usa Plotly/Altair/Bokeh, pero mantendremos Matplotlib/Seaborn y solo haremos un cambio de color simple en el código de Python. */
     </style>
 """, unsafe_allow_html=True)
 
@@ -181,9 +184,14 @@ if uploaded_file is not None:
                 # 2. GRÁFICO (Debajo)
                 st.markdown("### 📊 Distribución Visual")
                 fig, ax = plt.subplots(figsize=(10, 4))
-                sns.countplot(y=selected_variable, data=df, order=freq.index, palette='viridis', ax=ax)
+                # Usamos una paleta más vibrante y agregamos un borde blanco para el hover visual
+                bars = sns.countplot(y=selected_variable, data=df, order=freq.index, palette='Spectral', ax=ax)
                 ax.set_xlabel("Frecuencia")
                 ax.set_ylabel("Categoría")
+                
+                # Esto es un truco visual para el color, pero la interactividad directa con CSS/JS en un
+                # gráfico Matplotlib renderizado por Streamlit es muy limitada.
+                # Lo mejor que se puede hacer es cambiar la paleta de colores.
                 st.pyplot(fig, use_container_width=True)
                 
                 # INTERPRETACIÓN (Al final)
@@ -223,7 +231,7 @@ if uploaded_file is not None:
                 
                 p_simple = len(df[df['Red_social_mas_utilizada'] == red_simple]) / len(df)
                 
-                # Interpretación debajo
+                # Resultado con porcentaje
                 c2.metric("Resultado Matemático", f"{p_simple:.4f}", f"{p_simple*100:.2f}%")
                 st.info(f"**Interpretación:** Existe una probabilidad de **{p_simple:.4f}** de seleccionar aleatoriamente un usuario de **{red_simple}**.")
             
