@@ -18,7 +18,7 @@ st.markdown("""
     div[data-testid="stMetric"] {
         background-color: #ffffff;
         border: 1px solid #e6e6e6;
-        padding: 10px; /* Reducido de 15px a 10px */
+        padding: 10px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
@@ -99,24 +99,24 @@ if uploaded_file is not None:
 
                 st.subheader("1. Resumen Estadístico")
                 
-                # DISTRIBUCIÓN EN FILAS DE 3 (Para evitar que se corten los números)
+                # DISTRIBUCIÓN EN FILAS DE 3 (Con 4 decimales)
                 st.markdown("**Tendencia Central**")
                 c1, c2, c3 = st.columns(3)
-                c1.metric("Media", f"{mean_val:.2f}")
-                c2.metric("Mediana", f"{median_val:.2f}")
+                c1.metric("Media", f"{mean_val:.4f}")
+                c2.metric("Mediana", f"{median_val:.4f}")
                 c3.metric("Moda", f"{mode_val}")
                 
                 st.markdown("**Dispersión y Rango**")
                 c4, c5, c6 = st.columns(3)
-                c4.metric("Desv. Estándar", f"{std_val:.2f}")
-                c5.metric("Mínimo", f"{min_val:.2f}")
-                c6.metric("Máximo", f"{max_val:.2f}")
+                c4.metric("Desv. Estándar", f"{std_val:.4f}")
+                c5.metric("Mínimo", f"{min_val:.4f}")
+                c6.metric("Máximo", f"{max_val:.4f}")
 
                 st.markdown("**Posición (Cuartiles)**")
                 c7, c8, c9 = st.columns(3)
-                c7.metric("Q1 (25%)", f"{q1:.2f}")
-                c8.metric("Q3 (75%)", f"{q3:.2f}")
-                c9.metric("IQR (Rango Interc.)", f"{iqr:.2f}")
+                c7.metric("Q1 (25%)", f"{q1:.4f}")
+                c8.metric("Q3 (75%)", f"{q3:.4f}")
+                c9.metric("IQR (Rango Interc.)", f"{iqr:.4f}")
 
                 st.divider()
 
@@ -140,15 +140,15 @@ if uploaded_file is not None:
                     st.markdown("### 📝 Interpretación")
                     st.info(f"""
                     **Sobre el Centro:**
-                    El valor promedio es **{mean_val:.2f}**, mientras que el valor central (mediana) es **{median_val:.2f}**.
+                    El valor promedio es **{mean_val:.4f}**, mientras que el valor central (mediana) es **{median_val:.4f}**.
                     
                     **Sobre la Dispersión:**
-                    Los datos varían típicamente en **±{std_val:.2f}** unidades respecto a la media.
+                    Los datos varían típicamente en **±{std_val:.4f}** unidades respecto a la media.
                     
                     **Sobre la Posición (Resultados de arriba):**
-                    * El 25% inferior de los datos llega hasta **{q1:.2f}** (Q1).
-                    * El 75% de los datos está por debajo de **{q3:.2f}** (Q3).
-                    * El 50% central de la población se ubica entre estos dos valores (Rango Intercuartílico de **{iqr:.2f}**).
+                    * El 25% inferior de los datos llega hasta **{q1:.4f}** (Q1).
+                    * El 75% de los datos está por debajo de **{q3:.4f}** (Q3).
+                    * El 50% central de la población se ubica entre estos dos valores (Rango Intercuartílico de **{iqr:.4f}**).
                     """)
 
             # --- CASO CATEGÓRICO ---
@@ -170,18 +170,22 @@ if uploaded_file is not None:
                 c_kpi1.metric("Categoría más común (Moda)", freq.idxmax())
                 c_kpi2.metric("Total de Registros", len(df))
 
-                c_graf, c_tbl = st.columns([1, 1])
-                with c_graf:
-                    fig, ax = plt.subplots(figsize=(6, 5))
-                    sns.countplot(y=selected_variable, data=df, order=freq.index, palette='viridis', ax=ax)
-                    st.pyplot(fig)
-                
-                with c_tbl:
-                    st.dataframe(
-                        freq_table.style.format("{:.2f}", subset=['Frec. Relativa (%)', 'Acumulada Rel. (%)'])
-                        .background_gradient(cmap="Blues", subset=['Frec. Absoluta']),
-                        use_container_width=True, height=400
-                    )
+                # 1. TABLA (Arriba, ancho completo)
+                st.markdown("### 📋 Tabla de Frecuencias")
+                st.dataframe(
+                    freq_table.style.format("{:.4f}", subset=['Frec. Relativa (%)', 'Acumulada Rel. (%)'])
+                    .background_gradient(cmap="Blues", subset=['Frec. Absoluta']),
+                    use_container_width=True
+                )
+
+                # 2. GRÁFICO (Debajo, ancho completo)
+                st.markdown("### 📊 Distribución Visual")
+                # Ajustamos el tamaño del gráfico para que sea panorámico
+                fig, ax = plt.subplots(figsize=(10, 4))
+                sns.countplot(y=selected_variable, data=df, order=freq.index, palette='viridis', ax=ax)
+                ax.set_xlabel("Frecuencia")
+                ax.set_ylabel("Categoría")
+                st.pyplot(fig, use_container_width=True)
 
             # BOTÓN DESCARGA
             if export_df is not None:
@@ -251,7 +255,7 @@ if uploaded_file is not None:
                     if not sub_bin.empty:
                         p = sub_bin['Red_social_mas_utilizada'].value_counts(normalize=True).get(red_bin, 0)
                         prob_k = binom.pmf(k, n, p)
-                        st.success(f"Probabilidad de encontrar exactamente **{k}** usuarios de **{red_bin}** en **{n}** intentos (p_base={p:.2f}):")
+                        st.success(f"Probabilidad de encontrar exactamente **{k}** usuarios de **{red_bin}** en **{n}** intentos (p_base={p:.4f}):")
                         st.metric("Resultado Binomial", f"{prob_k:.4f}")
                     else:
                         st.error("Sin datos suficientes.")
