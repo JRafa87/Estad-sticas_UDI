@@ -80,7 +80,7 @@ if uploaded_file is not None:
     lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión", df['Lugar_habitual_conexion'].unique())
     
     usuarios_laborales = df[df['Lugar_habitual_conexion'] == lugar_conexion]
-    usuarios_plataforma_laborales = usuarios_laborales[usuarios_laborales['Plataforma_mensajeria'] == plataforma_mensajeria].shape[0]
+    usuarios_plataforma_laborales = usuarios_laborales[usuarios_laborales['Uso_redes_durante_trabajo'] == plataforma_mensajeria].shape[0]
     probabilidad_condicional = usuarios_plataforma_laborales / usuarios_laborales.shape[0]
     
     st.write(f"Probabilidad de que un usuario esté usando {plataforma_mensajeria} en {lugar_conexion}: {probabilidad_condicional:.2f}")
