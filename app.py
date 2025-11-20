@@ -20,7 +20,7 @@ if uploaded_file is not None:
     st.dataframe(df.head())  # Mostrar las primeras filas
 
     # Selección de la variable para análisis
-    selected_variable = st.selectbox("Selecciona la variable para el análisis", df.columns)
+    selected_variable = st.selectbox("Selecciona la variable para el análisis", df.columns, key="var_select")
 
     # Botón para ejecutar el análisis
     if st.button("Ejecutar Análisis"):
@@ -39,11 +39,19 @@ if uploaded_file is not None:
             var_value = df[selected_variable].var()
 
             # Mostrar estadísticas
-            st.write(f"Media: {mean_value}")
-            st.write(f"Mediana: {median_value}")
-            st.write(f"Moda: {mode_value}")
-            st.write(f"Desviación Estándar: {std_dev}")
-            st.write(f"Varianza: {var_value}")
+            st.write(f"**Media**: {mean_value:.2f}")
+            st.write(f"**Mediana**: {median_value:.2f}")
+            st.write(f"**Moda**: {mode_value}")
+            st.write(f"**Desviación Estándar**: {std_dev:.2f}")
+            st.write(f"**Varianza**: {var_value:.2f}")
+
+            # **Interpretación de los resultados**
+            st.markdown(f"### Interpretación de los resultados")
+            st.write(f"**Media**: La media de {selected_variable} es {mean_value:.2f}, lo que indica el valor promedio de la variable.")
+            st.write(f"**Mediana**: La mediana de {selected_variable} es {median_value:.2f}, lo que indica que la mitad de los datos está por debajo de este valor.")
+            st.write(f"**Moda**: La moda es {mode_value}, lo que indica el valor más frecuente de la variable.")
+            st.write(f"**Desviación Estándar**: La desviación estándar de {selected_variable} es {std_dev:.2f}, lo que indica cuánto se dispersan los datos alrededor de la media.")
+            st.write(f"**Varianza**: La varianza de {selected_variable} es {var_value:.2f}, que es el cuadrado de la desviación estándar y también mide la dispersión de los datos.")
 
             # Crear histogramas
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -92,14 +100,14 @@ if uploaded_file is not None:
         st.subheader("Ejercicios de Probabilidad")
 
         # Ejercicio 1: Probabilidad Simple
-        red_social = st.selectbox("Selecciona una red social para calcular la probabilidad", df['Red_social_mas_utilizada'].unique())
+        red_social = st.selectbox("Selecciona una red social para calcular la probabilidad", df['Red_social_mas_utilizada'].unique(), key="red_social", index=0)
         usuarios_red_social = df[df['Red_social_mas_utilizada'] == red_social].shape[0]
         probabilidad_red_social = usuarios_red_social / df.shape[0]
         st.write(f"Probabilidad de que un usuario esté usando {red_social}: {probabilidad_red_social:.2f}")
         
         # Ejercicio 2: Probabilidad Condicional
-        plataforma_mensajeria = st.selectbox("Selecciona si se usa redes durante el trabajo", df['Uso_redes_durante_trabajo'].unique())
-        lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión", df['Lugar_habitual_conexion'].unique())
+        plataforma_mensajeria = st.selectbox("Selecciona si se usa redes durante el trabajo", df['Uso_redes_durante_trabajo'].unique(), key="plataforma_mensajeria")
+        lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión", df['Lugar_habitual_conexion'].unique(), key="lugar_conexion")
         
         # Filtrar los datos para calcular la probabilidad
         usuarios_laborales = df[df['Lugar_habitual_conexion'] == lugar_conexion]
@@ -109,8 +117,8 @@ if uploaded_file is not None:
         st.write(f"Probabilidad de que un usuario esté usando redes durante su jornada laboral en {lugar_conexion}: {probabilidad_condicional:.2f}")
 
         # Ejercicio 3: Distribución Binomial
-        lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión para distribución binomial", df['Lugar_habitual_conexion'].unique())
-        red_social = st.selectbox("Selecciona la red social para distribución binomial", df['Red_social_mas_utilizada'].unique())
+        lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión para distribución binomial", df['Lugar_habitual_conexion'].unique(), key="lugar_conexion_binomial")
+        red_social = st.selectbox("Selecciona la red social para distribución binomial", df['Red_social_mas_utilizada'].unique(), key="red_social_binomial")
 
         # Filtrar los usuarios que se conectan desde el lugar seleccionado
         usuarios_lugar = df[df['Lugar_habitual_conexion'] == lugar_conexion]
@@ -144,4 +152,5 @@ if uploaded_file is not None:
                 file_name="resultados_analisis.csv",
                 mime="text/csv"
             )
+
 
