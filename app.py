@@ -154,7 +154,7 @@ if uploaded_file is not None:
 
                 # POSICIÓN (PÚRPURA)
                 st.markdown("**Posición (Cuartiles)**")
-                c7, c8, c9 = st.columns(3)
+                c7, c8, c9, c10 = st.columns(4) # AUMENTAR COLUMNAS PARA Q2
 
                 c7.markdown('<div class="metric-position">', unsafe_allow_html=True)
                 c7.metric("Mínimo", f"{min_val:.2f}")
@@ -164,9 +164,14 @@ if uploaded_file is not None:
                 c8.metric("Q1 (25%)", f"{q1:.2f}")
                 c8.markdown('</div>', unsafe_allow_html=True)
 
+                # Q2 AÑADIDO
                 c9.markdown('<div class="metric-position">', unsafe_allow_html=True)
-                c9.metric("Q3 (75%)", f"{q3:.2f}")
+                c9.metric("Q2 (Mediana)", f"{median_val:.2f}")
                 c9.markdown('</div>', unsafe_allow_html=True)
+                
+                c10.markdown('<div class="metric-position">', unsafe_allow_html=True)
+                c10.metric("Q3 (75%)", f"{q3:.2f}")
+                c10.markdown('</div>', unsafe_allow_html=True)
                 
                 # IQR (Usando el color de Posición)
                 col_iqr = st.columns(3)[1]
@@ -324,7 +329,7 @@ if uploaded_file is not None:
                     if not sub_bin.empty:
                         p = sub_bin['Red_social_mas_utilizada'].value_counts(normalize=True).get(red_bin, 0)
                         prob_k = binom.pmf(k, n, p)
-                        st.metric("Resultado Binomial", f"{prob_k:.4f}", f"{prob_k*100:.2f}%") # AÑADIDO PORCENTAJE
+                        st.metric("Resultado Binomial", f"{prob_k:.4f}", f"{prob_k*100:.2f}%")
                     else:
                         st.error("Sin datos suficientes.")
                 
