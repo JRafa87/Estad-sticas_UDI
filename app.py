@@ -20,7 +20,7 @@ if uploaded_file is not None:
     st.dataframe(df.head())  # Mostrar las primeras filas
 
     # Selección de la variable para análisis
-    selected_variable = st.selectbox("Selecciona la variable para el análisis", df.columns, key="var_select")
+    selected_variable = st.selectbox("Selecciona la variable para el análisis", df.columns, key="var_select", index=0)
 
     # Botón para ejecutar el análisis
     if st.button("Ejecutar Análisis"):
@@ -47,11 +47,11 @@ if uploaded_file is not None:
 
             # **Interpretación de los resultados**
             st.markdown(f"### Interpretación de los resultados")
-            st.write(f"**Media**: La media de {selected_variable} es {mean_value:.2f}, lo que indica el valor promedio de la variable.")
-            st.write(f"**Mediana**: La mediana de {selected_variable} es {median_value:.2f}, lo que indica que la mitad de los datos está por debajo de este valor.")
-            st.write(f"**Moda**: La moda es {mode_value}, lo que indica el valor más frecuente de la variable.")
-            st.write(f"**Desviación Estándar**: La desviación estándar de {selected_variable} es {std_dev:.2f}, lo que indica cuánto se dispersan los datos alrededor de la media.")
-            st.write(f"**Varianza**: La varianza de {selected_variable} es {var_value:.2f}, que es el cuadrado de la desviación estándar y también mide la dispersión de los datos.")
+            st.write(f"**Media**: La media de {selected_variable} es {mean_value:.2f}. Este valor representa el promedio general de la variable, lo que indica que, en promedio, los usuarios pasan {mean_value:.2f} minutos al día en redes sociales.")
+            st.write(f"**Mediana**: La mediana de {selected_variable} es {median_value:.2f}. La mediana indica que el 50% de los usuarios pasan menos de {median_value:.2f} minutos en redes, mientras que el otro 50% pasa más tiempo.")
+            st.write(f"**Moda**: La moda es {mode_value}. Este es el valor más frecuente, lo que indica que {mode_value} minutos es el tiempo más común que los usuarios pasan en redes sociales durante el día.")
+            st.write(f"**Desviación Estándar**: La desviación estándar de {selected_variable} es {std_dev:.2f}. Este valor mide cuánto se dispersan los datos con respecto a la media. Una desviación estándar alta sugiere que los tiempos de uso varían considerablemente entre los usuarios.")
+            st.write(f"**Varianza**: La varianza de {selected_variable} es {var_value:.2f}. Este valor es el cuadrado de la desviación estándar y también mide la dispersión de los datos. Una varianza alta indica que hay una gran variabilidad en los tiempos de uso de redes entre los usuarios.")
 
             # Crear histogramas
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -152,5 +152,6 @@ if uploaded_file is not None:
                 file_name="resultados_analisis.csv",
                 mime="text/csv"
             )
+
 
 
