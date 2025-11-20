@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import binom
 
 # Título de la aplicación
 st.title("Análisis Interactivo de Datos de Redes Sociales y Productividad")
@@ -44,18 +45,19 @@ if uploaded_file is not None:
             st.write(f"Desviación Estándar: {std_dev}")
             st.write(f"Varianza: {var_value}")
 
-            # Gráficos para variables numéricas
+            # Crear histogramas
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.histplot(df[selected_variable], kde=True, ax=ax, color='skyblue', bins=20)
-            ax.set_title(f"Histograma de {selected_variable}")
-            ax.set_xlabel(selected_variable)
-            ax.set_ylabel('Frecuencia')
+            ax.set_title(f"Histograma de {selected_variable}", fontsize=16)
+            ax.set_xlabel(selected_variable, fontsize=12)
+            ax.set_ylabel('Frecuencia', fontsize=12)
             st.pyplot(fig)
 
+            # Crear boxplot
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.boxplot(data=df[selected_variable], ax=ax, color='lightgreen')
-            ax.set_title(f"Boxplot de {selected_variable}")
-            ax.set_xlabel(selected_variable)
+            ax.set_title(f"Boxplot de {selected_variable}", fontsize=16)
+            ax.set_xlabel(selected_variable, fontsize=12)
             st.pyplot(fig)
         
         else:  # Variables categóricas
@@ -81,13 +83,15 @@ if uploaded_file is not None:
             # Crear gráfico de barras
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.countplot(x=selected_variable, data=df, ax=ax, palette='viridis')
-            ax.set_title(f"Distribución de {selected_variable}")
-            ax.set_xlabel(selected_variable)
-            ax.set_ylabel('Frecuencia')
+            ax.set_title(f"Distribución de {selected_variable}", fontsize=16)
+            ax.set_xlabel(selected_variable, fontsize=12)
+            ax.set_ylabel('Frecuencia', fontsize=12)
             st.pyplot(fig)
 
-        # Ejercicios de probabilidad
+        # Título para la sección de probabilidades
         st.subheader("Ejercicios de Probabilidad")
+
+        # Ejercicio 1: Probabilidad Simple
         red_social = st.selectbox("Selecciona una red social para calcular la probabilidad", df['Red_social_mas_utilizada'].unique())
         usuarios_red_social = df[df['Red_social_mas_utilizada'] == red_social].shape[0]
         probabilidad_red_social = usuarios_red_social / df.shape[0]
@@ -108,15 +112,21 @@ if uploaded_file is not None:
         lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión para distribución binomial", df['Lugar_habitual_conexion'].unique())
         red_social = st.selectbox("Selecciona la red social para distribución binomial", df['Red_social_mas_utilizada'].unique())
 
+        # Filtrar los usuarios que se conectan desde el lugar seleccionado
         usuarios_lugar = df[df['Lugar_habitual_conexion'] == lugar_conexion]
+
+        # Calcular la probabilidad de que los usuarios seleccionen la red social elegida
         p = usuarios_lugar['Red_social_mas_utilizada'].value_counts(normalize=True).get(red_social, 0)
 
-        n = 10  # Número total de usuarios
-        k = 5   # Queremos saber la probabilidad de que 5 usuarios estén usando la red social seleccionada
+        # Verificar si p es 0 (es decir, si la red social no está presente en el lugar de conexión seleccionado)
+        if p == 0:
+            st.warning(f"No hay usuarios usando {red_social} en {lugar_conexion}. No se puede calcular la probabilidad binomial.")
+        else:
+            n = 10  # Número total de usuarios
+            k = 5   # Queremos saber la probabilidad de que 5 usuarios estén usando la red social seleccionada
 
-        probabilidad_binomial = binom.pmf(k, n, p)
-
-        st.write(f"Probabilidad de que 5 de 10 usuarios en {lugar_conexion} estén usando {red_social}: {probabilidad_binomial:.4f}")
+            probabilidad_binomial = binom.pmf(k, n, p)
+            st.write(f"Probabilidad de que 5 de 10 usuarios en {lugar_conexion} estén usando {red_social}: {probabilidad_binomial:.4f}")
 
         # Exportar Resultados
         if st.button("Exportar Resultados a CSV"):
@@ -134,3 +144,4 @@ if uploaded_file is not None:
                 file_name="resultados_analisis.csv",
                 mime="text/csv"
             )
+
