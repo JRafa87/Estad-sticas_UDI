@@ -47,11 +47,25 @@ if uploaded_file is not None:
 
             # **Interpretación de los resultados**
             st.markdown(f"### Interpretación de los resultados")
-            st.write(f"**Media**: La media de {selected_variable} es {mean_value:.2f}. Este valor representa el promedio general de la variable, lo que indica que, en promedio, los usuarios pasan {mean_value:.2f} minutos al día en redes sociales.")
-            st.write(f"**Mediana**: La mediana de {selected_variable} es {median_value:.2f}. La mediana indica que el 50% de los usuarios pasan menos de {median_value:.2f} minutos en redes, mientras que el otro 50% pasa más tiempo.")
-            st.write(f"**Moda**: La moda es {mode_value}. Este es el valor más frecuente, lo que indica que {mode_value} minutos es el tiempo más común que los usuarios pasan en redes sociales durante el día.")
-            st.write(f"**Desviación Estándar**: La desviación estándar de {selected_variable} es {std_dev:.2f}. Este valor mide cuánto se dispersan los datos con respecto a la media. Una desviación estándar alta sugiere que los tiempos de uso varían considerablemente entre los usuarios.")
-            st.write(f"**Varianza**: La varianza de {selected_variable} es {var_value:.2f}. Este valor es el cuadrado de la desviación estándar y también mide la dispersión de los datos. Una varianza alta indica que hay una gran variabilidad en los tiempos de uso de redes entre los usuarios.")
+            st.markdown(f"<div style='background-color: #F0F8FF; padding: 10px;'>"
+                        f"**Media**: La media de {selected_variable} es **{mean_value:.2f}**. Este valor indica el promedio de tiempo que los usuarios pasan en redes sociales. Un valor alto sugiere un uso promedio elevado."
+                        f"</div>", unsafe_allow_html=True)
+
+            st.markdown(f"<div style='background-color: #F0F8FF; padding: 10px;'>"
+                        f"**Mediana**: La mediana de {selected_variable} es **{median_value:.2f}**. Esto indica que el 50% de los usuarios pasan menos de este tiempo en redes sociales. Si es significativamente diferente de la media, podría indicar un sesgo en los datos."
+                        f"</div>", unsafe_allow_html=True)
+
+            st.markdown(f"<div style='background-color: #F0F8FF; padding: 10px;'>"
+                        f"**Moda**: La moda es **{mode_value}**. Este es el valor más frecuente en el conjunto de datos. En este caso, los usuarios más comunes pasan exactamente **{mode_value}** minutos al día en redes sociales."
+                        f"</div>", unsafe_allow_html=True)
+
+            st.markdown(f"<div style='background-color: #F0F8FF; padding: 10px;'>"
+                        f"**Desviación Estándar**: La desviación estándar de {selected_variable} es **{std_dev:.2f}**. Esto indica cuán dispersos están los datos respecto a la media. Una desviación estándar alta sugiere que hay grandes variaciones en el uso de redes sociales."
+                        f"</div>", unsafe_allow_html=True)
+
+            st.markdown(f"<div style='background-color: #F0F8FF; padding: 10px;'>"
+                        f"**Varianza**: La varianza de {selected_variable} es **{var_value:.2f}**. Esta es una medida de dispersión que refleja el grado de variabilidad de los tiempos de uso. Una varianza alta significa que hay una gran diferencia entre los usuarios en cuanto al tiempo que pasan en redes sociales."
+                        f"</div>", unsafe_allow_html=True)
 
             # Crear histogramas
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -100,12 +114,20 @@ if uploaded_file is not None:
         st.subheader("Ejercicios de Probabilidad")
 
         # Ejercicio 1: Probabilidad Simple
+        st.markdown(f"<div style='background-color: #E6F7FF; padding: 10px;'>"
+                    f"**Pregunta 1**: ¿Cuál es la probabilidad de que un usuario esté usando **X (Twitter)**?"
+                    f"</div>", unsafe_allow_html=True)
+        
         red_social = st.selectbox("Selecciona una red social para calcular la probabilidad", df['Red_social_mas_utilizada'].unique(), key="red_social", index=0)
         usuarios_red_social = df[df['Red_social_mas_utilizada'] == red_social].shape[0]
         probabilidad_red_social = usuarios_red_social / df.shape[0]
-        st.write(f"Probabilidad de que un usuario esté usando {red_social}: {probabilidad_red_social:.2f}")
+        st.write(f"Probabilidad de que un usuario esté usando {red_social}: **{probabilidad_red_social:.2f}**")
         
         # Ejercicio 2: Probabilidad Condicional
+        st.markdown(f"<div style='background-color: #E6F7FF; padding: 10px;'>"
+                    f"**Pregunta 2**: ¿Cuál es la probabilidad de que un usuario esté usando redes durante su jornada laboral?"
+                    f"</div>", unsafe_allow_html=True)
+        
         plataforma_mensajeria = st.selectbox("Selecciona si se usa redes durante el trabajo", df['Uso_redes_durante_trabajo'].unique(), key="plataforma_mensajeria")
         lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión", df['Lugar_habitual_conexion'].unique(), key="lugar_conexion")
         
@@ -114,9 +136,13 @@ if uploaded_file is not None:
         usuarios_plataforma_laborales = usuarios_laborales[usuarios_laborales['Uso_redes_durante_trabajo'] == plataforma_mensajeria].shape[0]
         probabilidad_condicional = usuarios_plataforma_laborales / usuarios_laborales.shape[0]
         
-        st.write(f"Probabilidad de que un usuario esté usando redes durante su jornada laboral en {lugar_conexion}: {probabilidad_condicional:.2f}")
+        st.write(f"Probabilidad de que un usuario esté usando redes durante su jornada laboral en **{lugar_conexion}**: **{probabilidad_condicional:.2f}**")
 
         # Ejercicio 3: Distribución Binomial
+        st.markdown(f"<div style='background-color: #E6F7FF; padding: 10px;'>"
+                    f"**Pregunta 3**: ¿Cuál es la probabilidad de que 5 de 10 usuarios en **Cafetería** estén usando **X (Twitter)**?"
+                    f"</div>", unsafe_allow_html=True)
+        
         lugar_conexion = st.selectbox("Selecciona el lugar habitual de conexión para distribución binomial", df['Lugar_habitual_conexion'].unique(), key="lugar_conexion_binomial")
         red_social = st.selectbox("Selecciona la red social para distribución binomial", df['Red_social_mas_utilizada'].unique(), key="red_social_binomial")
 
@@ -134,7 +160,7 @@ if uploaded_file is not None:
             k = 5   # Queremos saber la probabilidad de que 5 usuarios estén usando la red social seleccionada
 
             probabilidad_binomial = binom.pmf(k, n, p)
-            st.write(f"Probabilidad de que 5 de 10 usuarios en {lugar_conexion} estén usando {red_social}: {probabilidad_binomial:.4f}")
+            st.write(f"Probabilidad de que 5 de 10 usuarios en {lugar_conexion} estén usando {red_social}: **{probabilidad_binomial:.4f}**")
 
         # Exportar Resultados
         if st.button("Exportar Resultados a CSV"):
@@ -152,6 +178,7 @@ if uploaded_file is not None:
                 file_name="resultados_analisis.csv",
                 mime="text/csv"
             )
+
 
 
 
