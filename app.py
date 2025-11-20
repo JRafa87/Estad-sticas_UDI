@@ -14,7 +14,7 @@ st.markdown("""
     .main {
         background-color: #f8f9fa;
     }
-    /* Ajuste para las métricas: Menos padding para evitar que se corten los números */
+    /* Ajuste para las métricas */
     div[data-testid="stMetric"] {
         background-color: #ffffff;
         border: 1px solid #e6e6e6;
@@ -81,9 +81,10 @@ if uploaded_file is not None:
             if df[selected_variable].dtype in ['float64', 'int64']:
                 # Cálculos
                 mean_val = df[selected_variable].mean()
-                median_val = df[selected_variable].median()
+                median_val = df[selected_variable].median() # Q2
                 mode_val = df[selected_variable].mode()[0]
                 std_val = df[selected_variable].std()
+                var_val = df[selected_variable].var() # Varianza
                 min_val = df[selected_variable].min()
                 max_val = df[selected_variable].max()
                 q1 = df[selected_variable].quantile(0.25)
@@ -92,64 +93,63 @@ if uploaded_file is not None:
 
                 # Preparar Exportación
                 export_df = pd.DataFrame({
-                    "Estadístico": ["Media", "Mediana", "Moda", "Desviación Std", "Mínimo", "Q1 (25%)", "Q3 (75%)", "Máximo", "IQR"],
-                    "Valor": [mean_val, median_val, mode_val, std_val, min_val, q1, q3, max_val, iqr]
+                    "Estadístico": ["Media", "Mediana (Q2)", "Moda", "Desviación Std", "Varianza", "Mínimo", "Q1 (25%)", "Q3 (75%)", "Máximo", "IQR"],
+                    "Valor": [mean_val, median_val, mode_val, std_val, var_val, min_val, q1, q3, max_val, iqr]
                 })
                 export_filename = f"estadisticas_{selected_variable}.csv"
 
                 st.subheader("1. Resumen Estadístico")
                 
-                # DISTRIBUCIÓN EN FILAS DE 3 (Con 4 decimales)
+                # TENDENCIA CENTRAL
                 st.markdown("**Tendencia Central**")
                 c1, c2, c3 = st.columns(3)
-                c1.metric("Media", f"{mean_val:.4f}")
-                c2.metric("Mediana", f"{median_val:.4f}")
+                c1.metric("Media", f"{mean_val:.2f}")
+                c2.metric("Mediana (Q2)", f"{median_val:.2f}")
                 c3.metric("Moda", f"{mode_val}")
                 
+                # DISPERSIÓN
                 st.markdown("**Dispersión y Rango**")
                 c4, c5, c6 = st.columns(3)
-                c4.metric("Desv. Estándar", f"{std_val:.4f}")
-                c5.metric("Mínimo", f"{min_val:.4f}")
-                c6.metric("Máximo", f"{max_val:.4f}")
+                c4.metric("Desv. Estándar", f"{std_val:.2f}")
+                c5.metric("Varianza", f"{var_val:.2f}") # Nueva métrica
+                c6.metric("Rango (Max - Min)", f"{max_val - min_val:.2f}")
 
+                # POSICIÓN
                 st.markdown("**Posición (Cuartiles)**")
                 c7, c8, c9 = st.columns(3)
-                c7.metric("Q1 (25%)", f"{q1:.4f}")
-                c8.metric("Q3 (75%)", f"{q3:.4f}")
-                c9.metric("IQR (Rango Interc.)", f"{iqr:.4f}")
+                c7.metric("Mínimo", f"{min_val:.2f}")
+                c8.metric("Q1 (25%)", f"{q1:.2f}")
+                c9.metric("Q3 (75%)", f"{q3:.2f}")
+                
+                st.metric("Rango Intercuartílico (IQR)", f"{iqr:.2f}")
 
                 st.divider()
 
-                # GRÁFICOS E INTERPRETACIÓN
+                # GRÁFICOS (Lado a Lado sin Pestañas)
                 st.subheader("2. Visualización")
-                col_viz, col_text = st.columns([2, 1])
+                
+                col_hist, col_box = st.columns(2)
 
-                with col_viz:
-                    # Pestañas internas solo para cambiar tipo de vista gráfica
-                    g1, g2 = st.tabs(["Histograma", "Boxplot"])
-                    with g1:
-                        fig_h, ax_h = plt.subplots(figsize=(8, 4))
-                        sns.histplot(df[selected_variable], kde=True, color='#3498db', ax=ax_h)
-                        st.pyplot(fig_h)
-                    with g2:
-                        fig_b, ax_b = plt.subplots(figsize=(8, 4))
-                        sns.boxplot(x=df[selected_variable], color='#2ecc71', ax=ax_b)
-                        st.pyplot(fig_b)
+                with col_hist:
+                    st.markdown("**Histograma** (Distribución)")
+                    fig_h, ax_h = plt.subplots(figsize=(8, 5))
+                    sns.histplot(df[selected_variable], kde=True, color='#3498db', ax=ax_h)
+                    st.pyplot(fig_h, use_container_width=True)
 
-                with col_text:
-                    st.markdown("### 📝 Interpretación")
-                    st.info(f"""
-                    **Sobre el Centro:**
-                    El valor promedio es **{mean_val:.4f}**, mientras que el valor central (mediana) es **{median_val:.4f}**.
-                    
-                    **Sobre la Dispersión:**
-                    Los datos varían típicamente en **±{std_val:.4f}** unidades respecto a la media.
-                    
-                    **Sobre la Posición (Resultados de arriba):**
-                    * El 25% inferior de los datos llega hasta **{q1:.4f}** (Q1).
-                    * El 75% de los datos está por debajo de **{q3:.4f}** (Q3).
-                    * El 50% central de la población se ubica entre estos dos valores (Rango Intercuartílico de **{iqr:.4f}**).
-                    """)
+                with col_box:
+                    st.markdown("**Boxplot** (Valores Atípicos)")
+                    fig_b, ax_b = plt.subplots(figsize=(8, 5))
+                    sns.boxplot(x=df[selected_variable], color='#2ecc71', ax=ax_b)
+                    st.pyplot(fig_b, use_container_width=True)
+
+                # INTERPRETACIÓN (Debajo de los gráficos)
+                st.markdown("### 📝 Interpretación")
+                st.info(f"""
+                **Análisis de Resultados:**
+                * **Centralidad:** El promedio es **{mean_val:.2f}** y la mediana (Q2) es **{median_val:.2f}**.
+                * **Dispersión:** La **Desviación Estándar** es **{std_val:.2f}**, indicando una variabilidad típica. La **Varianza** es **{var_val:.2f}**.
+                * **Ubicación:** El 50% central de los datos (IQR) oscila entre **{q1:.2f}** (Q1) y **{q3:.2f}** (Q3).
+                """)
 
             # --- CASO CATEGÓRICO ---
             else:
@@ -170,22 +170,32 @@ if uploaded_file is not None:
                 c_kpi1.metric("Categoría más común (Moda)", freq.idxmax())
                 c_kpi2.metric("Total de Registros", len(df))
 
-                # 1. TABLA (Arriba, ancho completo)
+                # 1. TABLA (Arriba) - Formato 2 decimales
                 st.markdown("### 📋 Tabla de Frecuencias")
                 st.dataframe(
-                    freq_table.style.format("{:.4f}", subset=['Frec. Relativa (%)', 'Acumulada Rel. (%)'])
+                    freq_table.style.format("{:.2f}", subset=['Frec. Relativa (%)', 'Acumulada Rel. (%)'])
                     .background_gradient(cmap="Blues", subset=['Frec. Absoluta']),
                     use_container_width=True
                 )
 
-                # 2. GRÁFICO (Debajo, ancho completo)
+                # 2. GRÁFICO (Debajo)
                 st.markdown("### 📊 Distribución Visual")
-                # Ajustamos el tamaño del gráfico para que sea panorámico
                 fig, ax = plt.subplots(figsize=(10, 4))
                 sns.countplot(y=selected_variable, data=df, order=freq.index, palette='viridis', ax=ax)
                 ax.set_xlabel("Frecuencia")
                 ax.set_ylabel("Categoría")
                 st.pyplot(fig, use_container_width=True)
+                
+                # INTERPRETACIÓN (Al final)
+                st.markdown("### 📝 Interpretación")
+                top_cat = freq.idxmax()
+                top_val = freq.max()
+                top_perc = (top_val / len(df)) * 100
+                st.info(f"""
+                **Hallazgos Principales:**
+                * La categoría predominante es **{top_cat}**, con **{top_val}** registros.
+                * Esto representa el **{top_perc:.2f}%** del total de la muestra.
+                """)
 
             # BOTÓN DESCARGA
             if export_df is not None:
@@ -200,7 +210,7 @@ if uploaded_file is not None:
                     )
 
         # ==========================================
-        # PESTAÑA 2: PROBABILIDADES
+        # PESTAÑA 2: PROBABILIDADES (Mantiene 4 decimales)
         # ==========================================
         with tab_prob:
             st.header("Laboratorio de Probabilidades")
@@ -212,8 +222,10 @@ if uploaded_file is not None:
                 red_simple = c1.selectbox("Evento (Red Social):", df['Red_social_mas_utilizada'].unique())
                 
                 p_simple = len(df[df['Red_social_mas_utilizada'] == red_simple]) / len(df)
-                c2.info(f"Probabilidad de seleccionar un usuario de **{red_simple}** al azar:")
-                c2.metric("Resultado", f"{p_simple:.4f}", f"{p_simple*100:.2f}%")
+                
+                # Interpretación debajo
+                c2.metric("Resultado Matemático", f"{p_simple:.4f}", f"{p_simple*100:.2f}%")
+                st.info(f"**Interpretación:** Existe una probabilidad de **{p_simple:.4f}** de seleccionar aleatoriamente un usuario de **{red_simple}**.")
             
             st.divider()
 
@@ -230,10 +242,13 @@ if uploaded_file is not None:
                     subset = df[df['Lugar_habitual_conexion'] == lugar_cond]
                     if not subset.empty:
                         p_cond = len(subset[subset['Uso_redes_durante_trabajo'] == trabajo_cond]) / len(subset)
-                        st.info(f"Si sabemos que el usuario está en **{lugar_cond}**, la probabilidad de que **{trabajo_cond}** use redes es:")
                         st.metric("Resultado Condicional", f"{p_cond:.4f}", f"{p_cond*100:.2f}%")
                     else:
                         st.warning("No hay datos para esta condición.")
+                
+                # Interpretación debajo
+                if not subset.empty:
+                    st.info(f"**Interpretación:** Dado que sabemos que el usuario está en **{lugar_cond}**, la probabilidad ajustada de que **{trabajo_cond}** use redes es **{p_cond:.4f}**.")
 
             st.divider()
 
@@ -255,10 +270,13 @@ if uploaded_file is not None:
                     if not sub_bin.empty:
                         p = sub_bin['Red_social_mas_utilizada'].value_counts(normalize=True).get(red_bin, 0)
                         prob_k = binom.pmf(k, n, p)
-                        st.success(f"Probabilidad de encontrar exactamente **{k}** usuarios de **{red_bin}** en **{n}** intentos (p_base={p:.4f}):")
                         st.metric("Resultado Binomial", f"{prob_k:.4f}")
                     else:
                         st.error("Sin datos suficientes.")
+                
+                # Interpretación debajo
+                if not sub_bin.empty:
+                    st.info(f"**Interpretación:** En una muestra de **{n}** usuarios en **{lugar_bin}**, la probabilidad de encontrar exactamente **{k}** usuarios de **{red_bin}** es **{prob_k:.4f}** (usando p_base={p:.4f}).")
 
     except Exception as e:
         st.error(f"Error al leer el archivo: {e}")
