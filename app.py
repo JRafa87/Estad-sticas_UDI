@@ -89,7 +89,7 @@ if uploaded_file is not None:
         tab_desc, tab_prob = st.tabs(["📈 Análisis Descriptivo", "🎲 Probabilidades"])
 
         # ==========================================
-        # PESTAÑA 1: DESCRIPTIVA
+        # PESTAÑA 1: DESCRIPTIVA (MODIFICADA REGPLOT)
         # ==========================================
         with tab_desc:
             col_var, _ = st.columns([1, 2])
@@ -210,8 +210,8 @@ if uploaded_file is not None:
                 
                 st.divider()
                 
-                # --- ANÁLISIS BIVARIADO NUMÉRICO (DISPERSIÓN) ---
-                st.subheader("3. Análisis Bivariado: Gráfico de Dispersión")
+                # --- ANÁLISIS BIVARIADO NUMÉRICO (DISPERSIÓN CON LÍNEA DE REGRESIÓN) ---
+                st.subheader("3. Análisis Bivariado: Gráfico de Dispersión y Regresión")
                 
                 numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
                 comparison_options = [col for col in numerical_cols if col != selected_variable]
@@ -219,16 +219,22 @@ if uploaded_file is not None:
                 if comparison_options:
                     selected_comparison = st.selectbox("Selecciona la variable numérica para comparar (Eje Y):", comparison_options)
                     
-                    # GRÁFICO DE DISPERSIÓN
+                    # GRÁFICO DE DISPERSIÓN CON REGPLOT (MUESTRA LA LÍNEA DE TENDENCIA)
                     fig_scatter, ax_scatter = plt.subplots(figsize=(8, 5))
-                    sns.scatterplot(x=df[selected_variable], y=df[selected_comparison], ax=ax_scatter)
-                    ax_scatter.set_title(f"Dispersión: {selected_variable} vs {selected_comparison}")
+                    
+                    # Usamos regplot para añadir la línea de regresión y la banda de confianza
+                    sns.regplot(x=df[selected_variable], y=df[selected_comparison], 
+                                scatter_kws={'alpha':0.6, 'color':'#3498db'}, # Estilo de puntos
+                                line_kws={'color':'#e74c3c'}, # Estilo de línea de regresión
+                                ax=ax_scatter)
+                    
+                    ax_scatter.set_title(f"Regresión Lineal: {selected_variable} vs {selected_comparison}")
                     st.pyplot(fig_scatter, use_container_width=True)
                     
                     # Cálculo de Correlación
                     correlation = df[[selected_variable, selected_comparison]].corr().iloc[0, 1]
                     st.success(f"**Coeficiente de Correlación de Pearson:** **{correlation:.4f}**")
-                    st.caption("Indica la fuerza y dirección de la relación lineal.")
+                    st.caption("La línea roja indica la mejor tendencia lineal que ajusta los datos (Regresión Lineal).")
 
                 else:
                     st.warning("No hay suficientes variables numéricas para realizar un análisis de dispersión.")
@@ -336,7 +342,7 @@ if uploaded_file is not None:
             with st.container():
                 st.markdown("### 🎲 1. Probabilidad Simple")
                 c1, c2 = st.columns([1, 3])
-                red_simple = c1.selectbox("Evento (Red Social):", df['Red_social_mas_utilizada'].unique())
+                red_simple = st.selectbox("Evento (Red Social):", df['Red_social_mas_utilizada'].unique())
                 
                 p_simple = len(df[df['Red_social_mas_utilizada'] == red_simple]) / len(df)
                 
